@@ -1,0 +1,342 @@
+---
+title: "Modern Regression Analysis"
+format: pdf
+editor: visual
+---
+
+## Q3.
+
+#### Loading the bodyfat data
+
+```{r}
+library(mfp)
+library(ggplot2)
+library(readxl)
+data("bodyfat")
+head(bodyfat)
+```
+
+#### Converting weight(lbs) to weight(kgs)
+
+```{r}
+bodyfat$weight = bodyfat$weight * 0.45359237
+head(bodyfat)
+```
+
+#### Fitting the model between Y: body fat(%) versus X: weight (in kg).
+
+```{r}
+model1 = lm(brozek ~ weight,data=bodyfat)
+model1
+```
+
+### 1) Interpret the value of $\hat{\boldsymbol{\beta_1}}$ and explain why we should avoid interpreting $\hat{\boldsymbol{\beta_0}}$
+
+$\hat{\beta_1}$ is the slope of this model. This value represents the expected change in body fat(%) (Y) for each additional kilogram of weight (X). Here, $\hat{\beta_1}$ takes the value of 0.3565. This means for a kilogram increase in body weight, there will be a 0.3565% increase in body fat(%).
+
+$\hat{\beta_0}$ is the intercept of this model. This represents the expected value of body fat(%) when weight is zero. This will never happen in a real life scenario so there is no meaning in interpreting this.
+
+### 2) Fitting a second model with two co-variates
+
+```{r}
+model2 = lm(brozek ~ weight + abdomen,data=bodyfat)
+model2
+```
+
+The coefficient for the weight attribute has changed when we included abdomen attribute. This means that this new value for the weight attribute better describes the data along with the abdomen attribute. This signifies having the weight alone as a parameter to predict the body fat(%) may be misleading and including other attirbutes can change the effect of a particular attribute.
+
+### 3) Which of the two models provides a better fit to the data?
+
+```{r}
+coefficient_of_determinations = c(summary(model1)$r.squared,
+                                  summary(model2)$r.squared)
+coefficient_of_determinations
+```
+
+As we can see, model1 has coefficient of determination of 0.3759604 and model2 has a coefficient of determination of 0.7187265. The second model has a higher coefficient of determination. Which means that the variability in body fat(%) is better explained when both the co-variates abdomen and weight are involved. Basically model2 better fits the data.
+
+## Q4.
+
+```{r}
+population_data = read.csv("data_simulation.csv")
+head(population_data)
+```
+
+#### Step 1:
+
+```{r}
+n = 300
+values = matrix(NA,ncol=4,nrow=1000)
+for(i in 1:1000){
+  sampled_indexes = sample(1:1000,size=n)
+  data_sample = population_data[sampled_indexes,]
+  
+  model = lm(y ~ X1+X2+X3,data=data_sample)
+  values[i,] = coef(model)
+}
+
+colnames(values) = c("B0","B1","B2","B3")
+head(values)
+```
+
+### 1) Plotting estimates ($\hat{\boldsymbol{\beta_0}}$,$\hat{\boldsymbol{\beta_1}}$,$\hat{\boldsymbol{\beta_2}}$,$\hat{\boldsymbol{\beta_3}}$), i = 1.......1000 using histograms.
+
+```{r}
+ggplot(values, aes(x=B0)) + geom_histogram(bins=20,
+      color = "#000000",fill = "#66d497") + 
+      labs(title="Histogram values of B0",x="B0",y="Frequency")
+```
+
+```{r}
+ggplot(values, aes(x=B1)) + geom_histogram(bins=20,
+      color = "#000000",fill = "#66d497") + 
+      labs(title="Histogram values of B1",x="B1",y="Frequency")
+```
+
+```{r}
+ggplot(values, aes(x=B2)) + geom_histogram(bins=20,
+      color = "#000000",fill = "#66d497") + 
+      labs(title="Histogram values of B2",x="B2",y="Frequency")
+```
+
+```{r}
+ggplot(values, aes(x=B3)) + geom_histogram(bins=20,
+      color = "#000000",fill = "#66d497") + 
+      labs(title="Histogram values of B3",x="B3",y="Frequency")
+```
+
+### 2) Repeat the same for n=50
+
+```{r}
+n = 50
+values = matrix(NA,ncol=4,nrow=1000)
+for(i in 1:1000){
+  sampled_indexes = sample(1:1000,size=n)
+  data_sample = population_data[sampled_indexes,]
+  
+  model = lm(y ~ X1+X2+X3,data=data_sample)
+  values[i,] = coef(model)
+}
+
+colnames(values) = c("B0","B1","B2","B3")
+head(values)
+```
+
+#### Plotting the betas as histograms
+
+```{r}
+ggplot(values, aes(x=B0)) + geom_histogram(bins=20,
+      color = "#000000",fill = "#e38686") + 
+      labs(title="Histogram values of B0",x="B0",y="Frequency")
+```
+
+```{r}
+ggplot(values, aes(x=B1)) + geom_histogram(bins=20,
+      color = "#000000",fill = "#e38686") + 
+      labs(title="Histogram values of B1",x="B1",y="Frequency")
+```
+
+```{r}
+ggplot(values, aes(x=B2)) + geom_histogram(bins=20,
+      color = "#000000",fill = "#e38686") + 
+      labs(title="Histogram values of B2",x="B2",y="Frequency")
+```
+
+```{r}
+ggplot(values, aes(x=B3)) + geom_histogram(bins=20,
+      color = "#000000",fill = "#e38686") + 
+      labs(title="Histogram values of B3",x="B3",y="Frequency")
+```
+
+When the sample size n = 300, the estimates are more tightly centered true values.
+
+When the sample size n = 50, the estimates have more variability and may deviate from the true values.
+
+Increasing the sample size, reduces the variability of the parameters.
+
+### 3) Property of least squares which is illustrated in item 2.
+
+The comparison talks about the consistency parameter of the least squares estimation. As the sample size increases the estimated model parameters are closer to the true values. With a lower sample size, the model may suffer from sampling bias and the consistency might be less. So the estimates might deviate from the true values.
+
+## Q5.
+
+### 1) If our goal is to model the prices, which attribute would you select for a simple linear model? Why?
+
+Looking at the correlation plot, if we just need a simple linear model to model the prices, then the attribute with the highest correlation to price can we chosen, which is taxes with a correlation score of 0.88. Since, taxes is more positively correlated with the price, this would be a good attribute in a linear model.
+
+### 2) A model was fitted between Y : price and X : baths. Use the output shown to answer "By how much does a house price increase in average with the addition of one bath?"
+
+We see that the parameter estimate corresponding to the baths attribute is 17.775. This means that for addition of one bath, the price increases by 17.775units by average.
+
+### 3) Use the output to test the hypothesis H0 : $\hat{\boldsymbol{\beta_1}}$ = 0 versus H1 : $\hat{\boldsymbol{\beta_1}} \not=$ 0 using $\boldsymbol{\alpha}$ = 0.05. Justify and interpret your conclusion.
+
+Hypothesis $\hat{\boldsymbol{\beta_1}}$ = 0 is the null hypothesis. This means there is no correlation between the price and the baths.
+
+Hypothesis $\hat{\boldsymbol{\beta_1}}$ $\not=$ 0. This means that we can correlate price and baths. As we see from the output given, the p value = 0.0000927, which is less than the significance level (0.05). This means that we can reject the null hypothesis and conclude there is a relationship between the baths and prices.
+
+## Q6. Data analysis
+
+### 1) Exploring gender:
+
+```{r}
+abalone = read.csv("abalone.csv")
+head(abalone)
+```
+
+```{r}
+#abalone_male = abalone[abalone$sex == "M",]
+#abalone_female = abalone[abalone$sex == "F",]
+ggplot(abalone, aes(y=shucked_weight,x=sex,fill=sex)) + geom_boxplot()
+```
+
+There is no significant difference between male and female abalones, but the weight distribution for the infant abalones are relatively lower to that of the male and females abalones.
+
+### 2) Exploring rings:
+
+```{r}
+abalone[,"age"] = abalone[,"rings"] + 1.5
+ggplot(abalone,aes(x=age)) + geom_histogram(bins=30) 
+```
+
+The distribution of age is skewed to the right.
+
+### 3) Exploring rings (2):
+
+```{r}
+abalone[,"age_category"] = cut(abalone$age,breaks= c(5,10,15,20,Inf), 
+                           labels = c("5 to 10 years","10 to 15 years",
+                                      "15 to 20 years","20 + years"))
+```
+
+Plotting the distribution of Y per age category
+
+```{r}
+ggplot(abalone,aes(y=shucked_weight,fill=age_category)) + 
+  geom_boxplot() + 
+  labs(title="Distribution of Shucked weight by age category",
+       x="Age Category",y="Shucked weight")
+```
+
+The distribution is relatively same for the age categories 10 to 15 years, 15 to 20 years and 20 + years while the shucked weight is lesser for the age category 5 to 10 years.
+
+### 4) Correlations
+
+```{r}
+abalone_numeric <- abalone[, sapply(abalone, is.numeric)]
+correlation <- cor(abalone_numeric)
+correlation["shucked_weight",]
+```
+
+The correlation is the highest between shucked_weight and whole_weight. The correlation is 0.9694055
+
+### 5) Scatterplots:
+
+#### Y versus X: length
+
+```{r}
+ggplot(abalone,aes(y=shucked_weight,x=length)) + geom_point()
+```
+
+#### Y versus X: diamater
+
+```{r}
+ggplot(abalone,aes(y=shucked_weight,x=diameter)) + geom_point()
+```
+
+#### Y versus X: height
+
+```{r}
+ggplot(abalone,aes(y=shucked_weight,x=height)) + geom_point()
+```
+
+### 6) Fitting a linear model for Y using length, diameter, height and rings.
+
+```{r}
+abalone_model = lm(shucked_weight ~ length + diameter + height + rings,
+                   data=abalone)
+summary(abalone_model)
+```
+
+The equation is Y = -0.46734 + 1.01660(length) + 0.73082(diameter) + 0.67860(height) - 0.00994(rings)
+
+Coefficient of determination: 0.8241.
+
+82.41% of the variability in Y:shucked_weight is explained by the four co-variates length,diameter,height and rings.
+
+###  7) Outliers:
+
+```{r}
+ggplot(abalone,aes(x=height)) + geom_boxplot()
+```
+
+The above boxplot shows the heights of abalone. We can clearly see that two abalone with an abnormally high height marked on the boxplot.
+
+Interpretation of the boxplot:
+
+1.  The box shows the IQR, which ranges from the 25% to 75% of the data values, which is referred to as the first quartile (Q1) and the third quartile (Q3). The middle 50% of the data values are captured within this region.
+
+2.  The line in the middle of the box signifies the median, which divides the data into two equal halves.
+
+3.  The whiskers extend to the data points which are within 1.5 times the value of the IQR both sides from Q1 and Q3.
+
+4.  The two abalone height values beyond this whisker are the outliers which is shown in the boxplot.
+
+### 8) Outliers in regression:
+
+```{r}
+outlier_model = lm(shucked_weight ~ height,data = abalone)
+outlier_model
+```
+
+$\hat{\beta_0}$ = -0.2144
+
+$\hat{\beta_1}$ = 4.1125
+
+Visualizing the regression line before removing the outliers.
+
+```{r}
+ggplot(abalone,aes(x=height,y=shucked_weight)) + 
+  geom_point() + 
+  geom_abline(intercept = coef(outlier_model)[1],
+              slope = coef(outlier_model)[2])
+```
+
+#### Removing the outliers:
+
+```{r}
+q1 = quantile(abalone$height,0.25)
+q3 = quantile(abalone$height,0.75)
+
+iqr = IQR(abalone$height)
+
+lower = q1 - 1.5 * iqr
+upper = q3 + 1.5 * iqr
+
+abalone_outlier_removed = abalone[abalone$height >= lower & 
+                                    abalone$height <= upper,]
+
+ggplot(abalone_outlier_removed, aes(x=height)) + geom_boxplot()
+
+outlier_removed_model = lm(shucked_weight ~ height,
+                           data=abalone_outlier_removed)
+outlier_removed_model
+```
+
+Visualizing the regression line after removing outliers
+
+```{r}
+ggplot(abalone_outlier_removed,aes(x=height,y=shucked_weight)) + 
+  geom_point() + 
+  geom_abline(intercept = coef(outlier_removed_model)[1],
+              slope = coef(outlier_removed_model)[2]) + 
+  scale_x_continuous(limits = c(0, 1.2), 
+                     breaks = seq(0, 1.2, by = 0.3))
+```
+
+After removing the outliers
+
+$\hat{\beta_0}$ = -0.3285
+
+$\hat{\beta_1}$ = 4.9308
+
+Removal of the outliers has changed the regression parameters. The intercept has become more negative and the slope has increased. This is a better regression line as we can see from the scatterplot from when we had outliers.
