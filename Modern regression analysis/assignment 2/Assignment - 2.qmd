@@ -9,6 +9,7 @@ editor: visual
 ```{r}
 library(tidyverse)
 library(dplyr)
+library(olsrr)
 ```
 
 ```{r}
@@ -16,17 +17,32 @@ crime_data = read_csv("Crimes.csv")
 crime_data
 ```
 
-```{r}
-model1 = lm(VR ~ MR, data = crime_data)
-model2 = lm(VR ~ M, data = crime_data)
-model3 = lm(VR ~ P, data = crime_data)
-model4 = lm(VR ~ MR + M, data = crime_data)
-model5 = lm(VR ~ MR + P, data = crime_data)
-model6 = lm(VR ~ M + P, data = crime_data)
-model7 = lm(VR ~ M + P + MR, data = crime_data)
-model8 = lm(VR ~ 1, data = crime_data)
-```
+#### a)
 
 ```{r}
-summary(model1)
+model = lm(VR ~ ., data = crime_data)
+tab = ols_step_all_possible(model)
+results = tab$result[,c("predictors","aic","sbic","rsquare")]
+results
+```
+
+#### b)
+
+```{r}
+print(c(results$predictors[which.min(results$aic)],results$aic[which.min(results$aic)]))
+print(c(results$predictors[which.min(results$sbic)],results$sbic[which.min(results$sbic)]))
+print(c(results$predictors[which.max(results$rsquare)],results$rsquare[which.max(results$rsquare)]))
+```
+
+#### c)
+
+```{r}
+combinations = list(("1"),c("P","M","MR"),c("P + M","P + MR","M + MR"),c("P + M + MR"))
+min = 100000000
+
+for(i in 1:length(combinations)){
+  for(j in 1:length(combinations[[i]]))
+    f = as.formula(paste("VR ~ ",paste(combinations[[i]][j])))
+    model = lm(f,data = crime_data)
+}
 ```
