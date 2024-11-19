@@ -20,9 +20,9 @@ crime_data
 #### a)
 
 ```{r}
-model = lm(VR ~ ., data = crime_data)
-tab = ols_step_all_possible(model)
-results = tab$result[,c("predictors","aic","sbic","rsquare")]
+crime_model = lm(VR ~ ., data = crime_data)
+tab = ols_step_all_possible(crime_model)
+results = tab$result[,c("predictors","aic","sbc","rsquare")]
 results
 ```
 
@@ -30,19 +30,99 @@ results
 
 ```{r}
 print(c(results$predictors[which.min(results$aic)],results$aic[which.min(results$aic)]))
-print(c(results$predictors[which.min(results$sbic)],results$sbic[which.min(results$sbic)]))
+print(c(results$predictors[which.min(results$sbc)],results$sbc[which.min(results$sbc)]))
 print(c(results$predictors[which.max(results$rsquare)],results$rsquare[which.max(results$rsquare)]))
 ```
 
 #### c)
 
 ```{r}
-combinations = list(("1"),c("P","M","MR"),c("P + M","P + MR","M + MR"),c("P + M + MR"))
+combinations = list(("1"),c("P","M","MR"),c("M + P","MR + P","MR + M"),c("MR + M + P"))
 min = 100000000
+min_combination = ""
 
 for(i in 1:length(combinations)){
-  for(j in 1:length(combinations[[i]]))
+  flag = FALSE
+  for(j in 1:length(combinations[[i]])){
     f = as.formula(paste("VR ~ ",paste(combinations[[i]][j])))
-    model = lm(f,data = crime_data)
+    crime_model = lm(f,data = crime_data)
+    lm = sum(log(dnorm(crime_data$VR,fitted.values(crime_model),
+                       sd = summary(crime_model)$sigma)))
+    bic = -2 * lm + (i+1) * log(nrow(crime_data))
+    if(bic < min){
+      min = bic
+      min_combination = combinations[[i]][j]
+      flag = TRUE
+    }
+  }
+  if(flag == FALSE){
+    break
+  }
 }
+
+print(min)
+print(min_combination)
 ```
+
+#### d)
+
+By looking at the BIC values, the best possible subset found using the all possible regressions was MR + M with a BIC value of 679.282922. The forward selection algorithm using the BIC found the same subset MR + M with a BIC value of 679.3748.
+
+**...write more**
+
+#### e)
+
+**...write**
+
+## Q2)
+
+```{r}
+football = read_csv("football.csv")
+football
+```
+
+#### a)
+
+```{r}
+football_model = lm(y ~ x2 + x7 + x8,data=football)
+summary(football_model)
+```
+
+#### b) ...write stuff
+
+```{r}
+y_bar = mean(football$y)
+
+sst = sum((football$y - y_bar)^2)
+sse = sum((football$y - fitted.values(football_model))^2)
+ssr = sum((fitted.values(football_model) - y_bar)^2)
+
+cat("sse = ",sse," , ","ssr = ",ssr," , ","sst = ",sst)
+```
+
+The relationship between SSt, SSe, and SSr:
+
+SSt = SSe + SSr.
+
+```{r}
+sse + ssr
+```
+
+```{r}
+p = 3
+n = nrow(football)
+df_sse = n - p - 1
+df_ssr = p
+df_sst = df_sse + df_ssr
+
+cat("DF of sse = ",df_sse," , ","DF of ssr = ",df_ssr," , ","DF of sst = ",df_sst)
+```
+
+```{r}
+mst = sst / df_sst
+mse = sse / df_sse
+msr = ssr / df_ssr
+cat("MSE = ",mse," , ","MSR = ",msr," , ","MST = ",mst)
+```
+
+### c)
