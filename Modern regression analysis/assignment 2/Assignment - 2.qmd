@@ -74,7 +74,7 @@ By looking at the BIC values, the best possible subset found using the all possi
 
 **...write**
 
-## Q2)
+## Q4)
 
 ```{r}
 football = read_csv("football.csv")
@@ -132,11 +132,10 @@ cat("MSE = ",mse," , ","MSR = ",msr," , ","MST = ",mst)
 beta = solve(t(X)%*%X)%*%t(X)%*%football$y
 sigma_2 = sse / (n - p - 1)
 sigma = sigma_2 * solve(t(X)%*%X)
-sigma
 
 t_b1 = beta[2,1] / sqrt(sigma[2,2])
-t_b2 = beta[3,1] / sqrt(sigma[11])
-t_b3 = beta[4,1] / sqrt(sigma[16])
+t_b2 = beta[3,1] / sqrt(sigma[3,3])
+t_b3 = beta[4,1] / sqrt(sigma[4,4])
 
 print(c("T_" = t_b1, "T_" = t_b2, "T_" = t_b3))
 ```
@@ -163,15 +162,105 @@ Reject H0
 #### f)
 
 ```{r}
-
+c("Square of correlation coefficent" = cor(football$y, fitted.values(football_model))^2, "R2" = r2)
 ```
 
 #### g)
 
 ```{r}
 X_Star = matrix(c(1,2300,56,2100),ncol=1)
-X_Star
 
 Y_Star_mean = t(X_Star)%*%matrix(beta,ncol=1)
-Y_Star_mean_upper = Y_Star_mean + qt(0.05,n-p-1) * sqrt(sigma_2 * t(X_Star)%*%solve(t(X)%*%(X))%*%X_Star)
+
+Y_Star_mean_upper = Y_Star_mean + qt(0.95,n-p-1) * sqrt(sigma_2 * t(X_Star)%*%solve(t(X)%*%(X))%*%X_Star)
+Y_Star_mean_lower = Y_Star_mean - qt(0.95,n-p-1) * sqrt(sigma_2 * t(X_Star)%*%solve(t(X)%*%(X))%*%X_Star)
+
+c(lower = Y_Star_mean_lower,upper = Y_Star_mean_upper)
+```
+
+#### h)
+
+```{r}
+football_model = lm(y ~ x7 + x8,data=football)
+summary(football_model)
+```
+
+```{r}
+y_bar = mean(football$y)
+
+sst = sum((football$y - y_bar)^2)
+sse = sum((football$y - fitted.values(football_model))^2)
+ssr = sum((fitted.values(football_model) - y_bar)^2)
+
+cat("sse = ",sse," , ","ssr = ",ssr," , ","sst = ",sst)
+```
+
+```{r}
+p = 2
+n = nrow(football)
+df_sse = n - p - 1
+df_ssr = p
+df_sst = df_sse + df_ssr
+X = model.matrix(football_model)
+
+cat("DF of sse = ",df_sse," , ","DF of ssr = ",df_ssr," , ","DF of sst = ",df_sst)
+```
+
+```{r}
+mst = sst / df_sst
+mse = sse / df_sse
+msr = ssr / df_ssr
+cat("MSE = ",mse," , ","MSR = ",msr," , ","MST = ",mst)
+```
+
+#### i)
+
+```{r}
+f_stat = msr/mse
+c(f_stat = f_stat,"95% CI F distribution" = qf(0.95,p,n-p-1))
+```
+
+#### j)
+
+```{r}
+r2 = 1 - (sse/sst)
+r2_adj = 1 - (mse/mst)
+
+print(c(r2 = r2,r2_adj = r2_adj))
+```
+
+#### k)
+
+```{r}
+X_Star = matrix(c(1,56,2100),ncol=1)
+
+beta = solve(t(X)%*%X)%*%t(X)%*%football$y
+sigma_2 = sse / (n - p - 1)
+sigma = sigma_2 * solve(t(X)%*%X)
+
+Y_Star_mean = t(X_Star)%*%matrix(beta,ncol=1)
+
+Y_Star_mean_upper = Y_Star_mean + qt(0.95,n-p-1) * sqrt(sigma_2 * t(X_Star)%*%solve(t(X)%*%(X))%*%X_Star)
+Y_Star_mean_lower = Y_Star_mean - qt(0.95,n-p-1) * sqrt(sigma_2 * t(X_Star)%*%solve(t(X)%*%(X))%*%X_Star)
+
+c(lower = Y_Star_mean_lower,upper = Y_Star_mean_upper)
+```
+
+#### l)
+
+```{r}
+
+```
+
+## Q5)
+
+```{r}
+bike_sharing = read.csv("bikesharing.csv")
+bike_sharing
+```
+
+#### a)
+
+```{r}
+
 ```
