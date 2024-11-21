@@ -1,0 +1,56 @@
+---
+title: "Modern Regression Analysis"
+format: pdf
+editor: visual
+---
+
+```{r}
+data = read.csv("day.csv")
+data
+```
+
+```{r}
+y = data$cnt
+```
+
+```{r}
+x = data[,c("temp")]
+```
+
+```{r}
+model = lm(y ~ data$temp, data=data)
+summary(model)
+```
+
+```{r}
+x_bar = mean(x)
+y_bar = mean(y)
+
+ssx = sum((x - x_bar)^2)
+ssxy = sum((y-y_bar) * (x-x_bar))
+
+beta_1 = ssxy/ssx
+beta_0 = y_bar - beta_1 * x_bar
+
+print(c(Intercept = beta_0,Slope = beta_1))
+```
+
+```{r}
+sse = sum((y - fitted.values(model))^2)
+sst = sum((y - y_bar)^2)
+r2 = 1 - (sse/sst)
+
+mse = sse / (nrow(data) - 3)
+mst = sst / (nrow(data) - 1)
+
+1 - (mse/mst)
+```
+
+```{r}
+sigma_hat = sse / (nrow(data) - 2)
+var_hat_beta1 = sigma_hat / ssx
+sqrt(var_hat_beta1)
+
+var_hat_beta2 = sigma_hat*((1/nrow(data)) + (x_bar^2/ssx))
+sqrt(var_hat_beta2)
+```
