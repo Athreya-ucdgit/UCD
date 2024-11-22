@@ -17,24 +17,24 @@ crime_data = read_csv("Crimes.csv")
 crime_data
 ```
 
-#### a)
+#### a) Use R to fit all possible models and compute AIC, BIC and R2 adj for each model. Report a table with your results.
 
 ```{r}
 crime_model = lm(VR ~ ., data = crime_data)
 tab = ols_step_all_possible(crime_model)
-results = tab$result[,c("predictors","aic","sbc","rsquare")]
+results = tab$result[,c("predictors","aic","sbc","adjr")]
 results
 ```
 
-#### b)
+#### b) Indicate the best model overall according to each of AIC, BIC and R2 adj.
 
 ```{r}
 print(c(results$predictors[which.min(results$aic)],results$aic[which.min(results$aic)]))
 print(c(results$predictors[which.min(results$sbc)],results$sbc[which.min(results$sbc)]))
-print(c(results$predictors[which.max(results$rsquare)],results$rsquare[which.max(results$rsquare)]))
+print(c(results$predictors[which.max(results$adjr)],results$adjr[which.max(results$adjr)]))
 ```
 
-#### c)
+#### c) Implement a forward stepwise regression that uses BIC. You will start by fitting the null model (the model with no covariates) and computing its BIC. Then, consider all possible one covariate models and compute their BICs. Iterate until there is no improvement in your criteria.
 
 ```{r}
 combinations = list(("1"),c("P","M","MR"),c("M + P","MR + P","MR + M"),c("MR + M + P"))
@@ -64,17 +64,17 @@ print(min)
 print(min_combination)
 ```
 
-#### d)
+#### d) Does the forward stepwise method find the best possible subset? Compare the solutions to item (a) and (c). Explain why solutions from stepwise regression might differ from the all possible regressions method in (a).
 
 By looking at the BIC values, the best possible subset found using the all possible regressions was MR + M with a BIC value of 679.282922. The forward selection algorithm using the BIC found the same subset MR + M with a BIC value of 679.3748.
 
 **...write more**
 
-#### e)
+#### e) Explain how you could implement a backward selection algorithm using the F test as a decision rule. You can assume that the confidence level is α = 0.05.
 
 **...write**
 
-## Q4)
+## Q4) Multiple regression
 
 ```{r}
 football = read_csv("football.csv")
@@ -114,7 +114,6 @@ n = nrow(football)
 df_sse = n - p - 1
 df_ssr = p
 df_sst = df_sse + df_ssr
-X = model.matrix(football_model)
 
 cat("DF of sse = ",df_sse," , ","DF of ssr = ",df_ssr," , ","DF of sst = ",df_sst)
 ```
@@ -126,9 +125,10 @@ msr = ssr / df_ssr
 cat("MSE = ",mse," , ","MSR = ",msr," , ","MST = ",mst)
 ```
 
-#### c) write and do stuff....
+#### c)
 
 ```{r}
+X = model.matrix(football_model)
 beta = solve(t(X)%*%X)%*%t(X)%*%football$y
 sigma_2 = sse / (n - p - 1)
 sigma = sigma_2 * solve(t(X)%*%X)
@@ -153,8 +153,7 @@ print(c(r2 = r2,r2_adj = r2_adj))
 
 ```{r}
 f_stat = msr/mse
-c(f_stat = f_stat,"95% CI F distribution" = qf(0.95,p,n-p-1))
-
+c(f_stat = f_stat,"95% CI F distribution" = qf(0.95,p, n - p - 1))
 ```
 
 Reject H0
@@ -181,67 +180,69 @@ c(lower = Y_Star_mean_lower,upper = Y_Star_mean_upper)
 #### h)
 
 ```{r}
-football_model = lm(y ~ x7 + x8,data=football)
-summary(football_model)
+football_model_2 = lm(y ~ x7 + x8,data=football)
+summary(football_model_2)
 ```
 
 ```{r}
-y_bar = mean(football$y)
+y_bar_2 = mean(football$y)
 
-sst = sum((football$y - y_bar)^2)
-sse = sum((football$y - fitted.values(football_model))^2)
-ssr = sum((fitted.values(football_model) - y_bar)^2)
+sst_2 = sum((football$y - y_bar)^2)
+sse_2 = sum((football$y - fitted.values(football_model_2))^2)
+ssr_2 = sum((fitted.values(football_model_2) - y_bar)^2)
 
-cat("sse = ",sse," , ","ssr = ",ssr," , ","sst = ",sst)
+cat("sse = ",sse_2," , ","ssr = ",ssr_2," , ","sst = ",sst_2)
 ```
 
 ```{r}
-p = 2
+p_2 = 2
 n = nrow(football)
-df_sse = n - p - 1
-df_ssr = p
-df_sst = df_sse + df_ssr
-X = model.matrix(football_model)
+df_sse_2 = n - p_2 - 1
+df_ssr_2 = p_2
+df_sst_2 = df_sse_2 + df_ssr_2
 
-cat("DF of sse = ",df_sse," , ","DF of ssr = ",df_ssr," , ","DF of sst = ",df_sst)
+cat("DF of sse = ",df_sse_2," , ","DF of ssr = ",df_ssr_2," , ","DF of sst = ",df_sst_2)
 ```
 
 ```{r}
-mst = sst / df_sst
-mse = sse / df_sse
-msr = ssr / df_ssr
-cat("MSE = ",mse," , ","MSR = ",msr," , ","MST = ",mst)
+mst_2 = sst_2 / df_sst_2
+mse_2 = sse_2 / df_sse_2
+msr_2 = ssr_2 / df_ssr_2
+cat("MSE = ",mse_2," , ","MSR = ",msr_2," , ","MST = ",mst_2)
 ```
 
 #### i)
 
 ```{r}
-f_stat = msr/mse
-c(f_stat = f_stat,"95% CI F distribution" = qf(0.95,p,n-p-1))
+f_stat_2 = msr_2/mse_2
+c(f_stat = f_stat_2,"95% CI F distribution" = qf(0.95,p_2,n -p_2 -1))
 ```
 
 #### j)
 
 ```{r}
-r2 = 1 - (sse/sst)
-r2_adj = 1 - (mse/mst)
+r2_2 = 1 - (sse_2/sst_2)
+r2_adj_2 = 1 - (mse_2/mst_2)
 
-print(c(r2 = r2,r2_adj = r2_adj))
+print(c(r2 = r2_2,r2_adj = r2_adj_2))
 ```
 
 #### k)
 
+Y_Star_mean_upper - Y_Star_mean_lower
+
 ```{r}
-X_Star = matrix(c(1,56,2100),ncol=1)
+X = model.matrix(football_model_2)
 
 beta = solve(t(X)%*%X)%*%t(X)%*%football$y
-sigma_2 = sse / (n - p - 1)
+sigma_2 = sse / (n - p_2 - 1)
 sigma = sigma_2 * solve(t(X)%*%X)
 
+X_Star = matrix(c(1,56,2100),ncol=1)
 Y_Star_mean = t(X_Star)%*%matrix(beta,ncol=1)
 
-Y_Star_mean_upper = Y_Star_mean + qt(0.95,n-p-1) * sqrt(sigma_2 * t(X_Star)%*%solve(t(X)%*%(X))%*%X_Star)
-Y_Star_mean_lower = Y_Star_mean - qt(0.95,n-p-1) * sqrt(sigma_2 * t(X_Star)%*%solve(t(X)%*%(X))%*%X_Star)
+Y_Star_mean_upper = Y_Star_mean + qt(0.95,n - p_2 -1) * sqrt(sigma_2 * t(X_Star)%*%solve(t(X)%*%(X))%*%X_Star)
+Y_Star_mean_lower = Y_Star_mean - qt(0.95,n - p_2 - 1) * sqrt(sigma_2 * t(X_Star)%*%solve(t(X)%*%(X))%*%X_Star)
 
 c(lower = Y_Star_mean_lower,upper = Y_Star_mean_upper)
 ```
@@ -256,11 +257,53 @@ c(lower = Y_Star_mean_lower,upper = Y_Star_mean_upper)
 
 ```{r}
 bike_sharing = read.csv("bikesharing.csv")
-bike_sharing
 ```
 
 #### a)
 
 ```{r}
+bike_sharing$mnth = as.factor(bike_sharing$mnth)
+```
 
+#### b)
+
+```{r}
+bike_model = lm(cnt ~ hum + windspeed + temp + mnth, data = bike_sharing)
+summary(bike_model)
+```
+
+#### c)
+
+```{r}
+anova(bike_model)
+```
+
+#### d)
+
+By looking at the summary chart of the model, we can see the following.
+
+Months **with** significant difference compared to January, given Hum, Temp, and Windspeed:
+
+**April, May, September, October, November, December.**
+
+Months **without** significant difference compared to January, given Hum, Temp, and Windspeed
+
+**February, March, June, July, August.**
+
+#### e)
+
+```{r}
+X_Star = matrix(nrow = 0,ncol = 15)
+for(i in 1:12){
+  x = c(1,0.4,0.3,0.65,0,0,0,0,0,0,0,0,0,0,0)
+  if(i!=1){
+    x[3+i] = 1
+  }
+  X_Star = rbind(X_Star,x)
+}
+
+
+result = X_Star%*%matrix(coef(bike_model))
+dimnames(result) = list(c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"),c("Predicted value"))
+knitr::kable(result)
 ```
