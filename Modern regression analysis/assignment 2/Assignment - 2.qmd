@@ -6,38 +6,44 @@ editor: visual
 
 ## Q3. Model Selection
 
-```{r}
+```{r results='hide',message=FALSE, warning=FALSE}
 library(tidyverse)
 library(dplyr)
 library(olsrr)
 ```
 
 ```{r}
-crime_data = read_csv("Crimes.csv")
+crime_data = read_csv("Crimes.csv", show_col_types = FALSE)
 crime_data
 ```
 
-#### a) Use R to fit all possible models and compute AIC, BIC and R2 adj for each model. Report a table with your results.
+#### a) Use R to fit all possible models and compute AIC, BIC and $R^2_{\text{adj}}$ for each model. Report a table with your results.
 
 ```{r}
 crime_model = lm(VR ~ ., data = crime_data)
 tab = ols_step_all_possible(crime_model)
 results = tab$result[,c("predictors","aic","sbc","adjr")]
-results
+knitr::kable(results)
 ```
 
-#### b) Indicate the best model overall according to each of AIC, BIC and R2 adj.
+#### b) Indicate the best model overall according to each of AIC, BIC and $R^2_{\text{adj}}$.
 
 ```{r}
-print(c("AIC",results$predictors[which.min(results$aic)],results$aic[which.min(results$aic)]))
-print(c("BIC",results$predictors[which.min(results$sbc)],results$sbc[which.min(results$sbc)]))
-print(c("R2",results$predictors[which.max(results$adjr)],results$adjr[which.max(results$adjr)]))
+print(c("AIC",results$predictors[which.min(results$aic)],
+        results$aic[which.min(results$aic)]))
+print(c("BIC",results$predictors[which.min(results$sbc)],
+        results$sbc[which.min(results$sbc)]))
+print(c("$R2_Adj",results$predictors[which.max(results$adjr)],
+        results$adjr[which.max(results$adjr)]))
 ```
 
 #### c) Implement a forward stepwise regression that uses BIC. You will start by fitting the null model (the model with no covariates) and computing its BIC. Then, consider all possible one covariate models and compute their BICs. Iterate until there is no improvement in your criteria.
 
 ```{r}
-combinations = list(("1"),c("P","M","MR"),c("M + P","MR + P","MR + M"),c("MR + M + P"))
+combinations = list(c("1"),
+                    c("P","M","MR"),
+                    c("M + P","MR + P","MR + M"),
+                    c("MR + M + P"))
 min = 100000000
 min_combination = ""
 
@@ -60,8 +66,7 @@ for(i in 1:length(combinations)){
   }
 }
 
-print(min)
-print(min_combination)
+print(c("Best Model" = min_combination, "Minimum BIC" = min))
 ```
 
 #### d) Does the forward stepwise method find the best possible subset? Compare the solutions to item (a) and (c). Explain why solutions from stepwise regression might differ from the all possible regressions method in (a).
@@ -74,7 +79,7 @@ For example, suppose there are four explanatory variables. The forward selection
 
 While these methods are efficient for large datasets with many explanatory variables—where evaluating all possible subsets is computationally infeasible—they may miss the global optimum. In this particular case, the forward selection algorithm did identify the global optimum subset but this cannot be guaranteed in every scenario.
 
-#### e) Explain how you could implement a backward selection algorithm using the F test as a decision rule. You can assume that the confidence level is α = 0.05.
+#### e) Explain how you could implement a backward selection algorithm using the F test as a decision rule. You can assume that the confidence level is $\alpha$ = 0.05.
 
 A backward selection algorithm using F-test as a decision rule can be implemented the same way we implement with BIC as the decision rule. Start with the complete model with all the explanatory variables and do the F-test with $\alpha$ = 0.05. This is our base.
 
@@ -83,18 +88,18 @@ A backward selection algorithm using F-test as a decision rule can be implemente
 ## Q4) Multiple regression
 
 ```{r}
-football = read_csv("football.csv")
+football = read_csv("football.csv", show_col_types = FALSE)
 football
 ```
 
-#### a) Fit a linear regression model relating the number of games won (y) to the team’s passing yardage (x2), the percentage of rushing plays (x7), and the opponents’ yards rushing (x8).
+#### a) Fit a linear regression model relating the number of games won ($y$) to the team’s passing yardage ($x2$), the percentage of rushing plays ($x7$), and the opponents’ yards rushing ($x8$).
 
 ```{r}
 football_model = lm(y ~ x2 + x7 + x8,data=football)
 summary(football_model)
 ```
 
-#### b)
+#### b) Compute the sum of squares.
 
 ```{r}
 y_bar = mean(football$y)
@@ -106,9 +111,9 @@ ssr = sum((fitted.values(football_model) - y_bar)^2)
 cat("sse = ",sse," , ","ssr = ",ssr," , ","sst = ",sst)
 ```
 
-The relationship between SSt, SSe, and SSr:
+The relationship between $SS_t$, $SS_e$, and $SS_r$:
 
-SSt = SSe + SSr.
+$SS_t$ = $SS_e$ + $SS_r$.
 
 ```{r}
 sse + ssr
@@ -121,7 +126,9 @@ df_sse = n - p - 1
 df_ssr = p
 df_sst = df_sse + df_ssr
 
-cat("DF of sse = ",df_sse," , ","DF of ssr = ",df_ssr," , ","DF of sst = ",df_sst)
+cat("DF of sse = ",df_sse," , ",
+    "DF of ssr = ",df_ssr," , ",
+    "DF of sst = ",df_sst)
 ```
 
 ```{r}
@@ -131,7 +138,7 @@ msr = ssr / df_ssr
 cat("MSE = ",mse," , ","MSR = ",msr," , ","MST = ",mst)
 ```
 
-#### c) Calculate the t statistics for testing the hypothesis H0 : βj = 0 versus H0 : βj= 0 for j = 1,2,3 where β1,β2,β3 are the coefficients of x2,x7 and x8.
+#### c) Calculate the t statistics for testing the hypothesis $H0$ : $\beta_j$ = 0 versus $H1$ : $\beta_j$ $\neq$ 0 for $j$ = 1,2,3 where $\beta_1$, $\beta_2$, $\beta_3$ are the coefficients of $x_2$, $x_7$ and $x_8$.
 
 ```{r}
 X = model.matrix(football_model)
@@ -146,7 +153,7 @@ t_b3 = beta[4,1] / sqrt(sigma[4,4])
 print(c("T_" = t_b1, "T_" = t_b2, "T_" = t_b3))
 ```
 
-#### d) Calculate R2 and R2 adj using (b)
+#### d) Calculate $R^2$ and $R^2_\text{adj}$ using (b).
 
 ```{r}
 r2 = 1 - (sse/sst)
@@ -162,28 +169,39 @@ f_stat = msr/mse
 c(f_stat = f_stat,"95% CI F distribution" = qf(0.95,p, n - p - 1))
 ```
 
-The F-statistic we have calculated is 29.4368. The 95% value of the F distribution for df = p and df = n-p-1 is 3.008787. Since, the F is greater than the 0.95 quantile, we reject H0.
+The F-statistic we have calculated is 29.4368. The 95% value of the F distribution for df = 3 and df = 24 is 3.008787. Since, the F is greater than the 0.95 quantile, we reject $H0$.
 
-#### f) Show numerically that R2 is equal to the square of the correlation coefficient between Yi and Yi_cap.
+#### f) Show numerically that $R^2$ is equal to the square of the correlation coefficient between $Y_i$ and $\hat{Y_i}$.
 
 ```{r}
-c("Square of correlation coefficent" = cor(football$y, fitted.values(football_model))^2, "R2" = r2)
+c("Square of correlation coefficent" = 
+    cor(football$y, fitted.values(football_model))^2, "R2" = r2)
 ```
 
-#### g) Find a 95% CI on the mean number of games won by a team when x2 = 2300,x7 = 56,x8 = 2100.
+We see that the Square of the correlation coefficient is equal to the $R^2$ value.
+
+#### g) Find a 95% CI on the mean number of games won by a team when $x_2$ = 2300, $x_7$= 56, $x_8$ = 2100.
 
 ```{r}
 X_Star = matrix(c(1,2300,56,2100),ncol=1)
 
 Y_Star_mean = t(X_Star)%*%matrix(beta,ncol=1)
 
-Y_Star_mean_upper = Y_Star_mean + qt(0.95,n-p-1) * sqrt(sigma_2 * t(X_Star)%*%solve(t(X)%*%(X))%*%X_Star)
-Y_Star_mean_lower = Y_Star_mean - qt(0.95,n-p-1) * sqrt(sigma_2 * t(X_Star)%*%solve(t(X)%*%(X))%*%X_Star)
+Y_Star_mean_upper = Y_Star_mean + qt(0.95,n-p-1) * 
+  sqrt(sigma_2 * t(X_Star)%*%solve(t(X)%*%(X))%*%X_Star)
+Y_Star_mean_lower = Y_Star_mean - qt(0.95,n-p-1) * 
+  sqrt(sigma_2 * t(X_Star)%*%solve(t(X)%*%(X))%*%X_Star)
 
-c(lower = Y_Star_mean_lower,upper = Y_Star_mean_upper)
+c(Lower = Y_Star_mean_lower,Upper = Y_Star_mean_upper)
 ```
 
-#### h) Fit the model using x7 and x8 only and compute its error sums of squares.
+```{r}
+Y_Star_mean_upper - Y_Star_mean_lower
+```
+
+The length of confidence interval is 1.29353.
+
+#### h) Fit the model using $x_7$ and $x_8$ only and compute its error sums of squares.
 
 ```{r}
 football_model_2 = lm(y ~ x7 + x8,data=football)
@@ -207,7 +225,9 @@ df_sse_2 = n - p_2 - 1
 df_ssr_2 = p_2
 df_sst_2 = df_sse_2 + df_ssr_2
 
-cat("DF of sse = ",df_sse_2," , ","DF of ssr = ",df_ssr_2," , ","DF of sst = ",df_sst_2)
+cat("DF of sse = ",df_sse_2," , ",
+    "DF of ssr = ",df_ssr_2," , ",
+    "DF of sst = ",df_sst_2)
 ```
 
 ```{r}
@@ -217,14 +237,16 @@ msr_2 = ssr_2 / df_ssr_2
 cat("MSE = ",mse_2," , ","MSR = ",msr_2," , ","MST = ",mst_2)
 ```
 
-#### i) Perform an F test for H0 : β2 = β3 = 0 versus H1 : at least one of β2 or β3 is different than zero.
+#### i) Perform an F test for hypothesis $H0$ : $\beta_2$ = $\beta_3$ = 0 versus $H1$ : at least one of $\beta_2$ or $\beta_3$ is different than zero.
 
 ```{r}
 f_stat_2 = msr_2/mse_2
 c(f_stat = f_stat_2,"95% CI F distribution" = qf(0.95,p_2,n -p_2 -1))
 ```
 
-#### j) Recompute R2 and R2 adj for the new model. How do these quantities compute to those in (d)?
+The F-statistic we have calculated is 29.4368. The 95% value of the F distribution for df = 2 and df = 25 is 3.008787. Since, the F is greater than the 0.95 quantile, we reject $H0$.
+
+#### j) Recompute $R^2$ and $R^2_\text{adj}$ for the new model. How do these quantities compute to those in (d) ?
 
 ```{r}
 r2_2 = 1 - (sse_2/sst_2)
@@ -233,7 +255,9 @@ r2_adj_2 = 1 - (mse_2/mst_2)
 print(c(r2 = r2_2,r2_adj = r2_adj_2))
 ```
 
-#### k) Recompute the 95% confidence interval on the mean number of games won by a team with the new model, using x7 = 56,x8 = 2100. Compare the length of the interval to g).
+The $R^2$ and $R^2_\text{adj}$ value are lower than that of the previous model.
+
+#### k) Recompute the 95% confidence interval on the mean number of games won by a team with the new model, using $x_7$ = 56, $x_8$ = 2100. Compare the length of the interval to (g).
 
 ```{r}
 X = model.matrix(football_model_2)
@@ -245,15 +269,23 @@ sigma = sigma_2 * solve(t(X)%*%X)
 X_Star = matrix(c(1,56,2100),ncol=1)
 Y_Star_mean = t(X_Star)%*%matrix(beta,ncol=1)
 
-Y_Star_mean_upper = Y_Star_mean + qt(0.95,n - p_2 -1) * sqrt(sigma_2 * t(X_Star)%*%solve(t(X)%*%(X))%*%X_Star)
-Y_Star_mean_lower = Y_Star_mean - qt(0.95,n - p_2 - 1) * sqrt(sigma_2 * t(X_Star)%*%solve(t(X)%*%(X))%*%X_Star)
+Y_Star_mean_upper = Y_Star_mean + qt(0.95,n - p_2 -1) * 
+  sqrt(sigma_2 * t(X_Star)%*%solve(t(X)%*%(X))%*%X_Star)
+Y_Star_mean_lower = Y_Star_mean - qt(0.95,n - p_2 - 1) * 
+  sqrt(sigma_2 * t(X_Star)%*%solve(t(X)%*%(X))%*%X_Star)
 
 c(lower = Y_Star_mean_lower,upper = Y_Star_mean_upper)
 ```
 
-#### l) Comment on how removing x2 from the model changed the model adequacy and its predictions.
+```{r}
+Y_Star_mean_upper - Y_Star_mean_lower
+```
 
-On removing x2, the model started performing worse. We can very clearly see if from the SSE value and R2 values. The initial model had a lesser SSE and a higher R2 value which signifies a better model.
+The length of the confidence interval is 1.25138. It is slightly lower than that of the previous model.
+
+#### l) Comment on how removing $x_2$ from the model changed the model adequacy and its predictions.
+
+On removing $x_2$, the model started performing worse. We can very clearly see from the $SS_e$ value and $R^2$ values. The initial model had a lesser $SS_e$ and a higher $R^2$ value which signifies a better model.
 
 ## Q5) Types of variables
 
@@ -265,6 +297,12 @@ bike_sharing = read.csv("bikesharing.csv")
 
 ```{r}
 bike_sharing$mnth = as.factor(bike_sharing$mnth)
+```
+
+We use the as.factor() function to make the mnth variable as an indicator variable. January is reference category by default. We can print the levels for a factor with the levels() function. We can then pass this variable to the lm() function and it will automatically recognize it as an indicator variable.
+
+```{r}
+levels(bike_sharing$mnth)
 ```
 
 #### b) Using R, fit a linear regression model to cnt using hum: the normalised measure of humidity, windspeed: the normalised wind speed on the day, temp: the normalised temperature, and mnth. Make sure to use mnth as a categorical variable using January as the reference category. Include the summary of the fitted model.
@@ -280,7 +318,9 @@ summary(bike_model)
 anova(bike_model)
 ```
 
-#### d) What months of the year have a different average number of bike rentals in comparison to January, given hum, temp and windspeed? Use α = 0.05.
+The P value for the mnth variable is \< 2.2e-16. A low p-value (typically \< 0.05) indicates that the variable is statistically significant and contributes meaningfully to explaining the variance in the response variable.
+
+#### d) What months of the year have a different average number of bike rentals in comparison to January, given hum, temp and windspeed? Use $\alpha$ = 0.05.
 
 By looking at the summary chart of the model, we can see the following.
 
@@ -292,7 +332,7 @@ Months **without** significant difference compared to January, given Hum, Temp, 
 
 **February, March, June, July, August.**
 
-#### e) Given hum = 0.4,temp = 0.3,windspeed = 0.65, what is the average number of rentals in each month? Report a table with your results.
+#### e) Given hum = 0.4, temp = 0.3, windspeed = 0.65, what is the average number of rentals in each month? Report a table with your results.
 
 ```{r}
 X_Star = matrix(nrow = 0,ncol = 15)
@@ -306,6 +346,8 @@ for(i in 1:12){
 
 
 result = X_Star%*%matrix(coef(bike_model))
-dimnames(result) = list(c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"),c("Predicted value"))
+dimnames(result) = list(c("Jan","Feb","Mar","Apr","May","Jun",
+                          "Jul","Aug","Sep","Oct","Nov","Dec"),
+                        c("Predicted value"))
 knitr::kable(result)
 ```
