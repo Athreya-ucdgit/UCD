@@ -29,9 +29,9 @@ results
 #### b) Indicate the best model overall according to each of AIC, BIC and R2 adj.
 
 ```{r}
-print(c(results$predictors[which.min(results$aic)],results$aic[which.min(results$aic)]))
-print(c(results$predictors[which.min(results$sbc)],results$sbc[which.min(results$sbc)]))
-print(c(results$predictors[which.max(results$adjr)],results$adjr[which.max(results$adjr)]))
+print(c("AIC",results$predictors[which.min(results$aic)],results$aic[which.min(results$aic)]))
+print(c("BIC",results$predictors[which.min(results$sbc)],results$sbc[which.min(results$sbc)]))
+print(c("R2",results$predictors[which.max(results$adjr)],results$adjr[which.max(results$adjr)]))
 ```
 
 #### c) Implement a forward stepwise regression that uses BIC. You will start by fitting the null model (the model with no covariates) and computing its BIC. Then, consider all possible one covariate models and compute their BICs. Iterate until there is no improvement in your criteria.
@@ -68,11 +68,17 @@ print(min_combination)
 
 By looking at the BIC values, the best possible subset found using the all possible regressions was MR + M with a BIC value of 679.282922. The forward selection algorithm using the BIC found the same subset MR + M with a BIC value of 679.3748.
 
-**...write more**
+Forward and backward selection algorithms are greedy algorithms, meaning they explore a sequence of local improvements and stop when no further improvement is found. However, this greedy nature can prevent them from finding the global optimum.
+
+For example, suppose there are four explanatory variables. The forward selection algorithm might identify a model with two variables as optimal because adding a third variable does not improve the model. As a result, it stops searching and does not evaluate the model with all four variables, which could potentially be the global optimum.
+
+While these methods are efficient for large datasets with many explanatory variables—where evaluating all possible subsets is computationally infeasible—they may miss the global optimum. In this particular case, the forward selection algorithm did identify the global optimum subset but this cannot be guaranteed in every scenario.
 
 #### e) Explain how you could implement a backward selection algorithm using the F test as a decision rule. You can assume that the confidence level is α = 0.05.
 
-**...write**
+A backward selection algorithm using F-test as a decision rule can be implemented the same way we implement with BIC as the decision rule. Start with the complete model with all the explanatory variables and do the F-test with $\alpha$ = 0.05. This is our base.
+
+**...write more**
 
 ## Q4) Multiple regression
 
@@ -81,14 +87,14 @@ football = read_csv("football.csv")
 football
 ```
 
-#### a)
+#### a) Fit a linear regression model relating the number of games won (y) to the team’s passing yardage (x2), the percentage of rushing plays (x7), and the opponents’ yards rushing (x8).
 
 ```{r}
 football_model = lm(y ~ x2 + x7 + x8,data=football)
 summary(football_model)
 ```
 
-#### b) ...write stuff
+#### b)
 
 ```{r}
 y_bar = mean(football$y)
@@ -125,7 +131,7 @@ msr = ssr / df_ssr
 cat("MSE = ",mse," , ","MSR = ",msr," , ","MST = ",mst)
 ```
 
-#### c)
+#### c) Calculate the t statistics for testing the hypothesis H0 : βj = 0 versus H0 : βj= 0 for j = 1,2,3 where β1,β2,β3 are the coefficients of x2,x7 and x8.
 
 ```{r}
 X = model.matrix(football_model)
@@ -140,7 +146,7 @@ t_b3 = beta[4,1] / sqrt(sigma[4,4])
 print(c("T_" = t_b1, "T_" = t_b2, "T_" = t_b3))
 ```
 
-#### d)
+#### d) Calculate R2 and R2 adj using (b)
 
 ```{r}
 r2 = 1 - (sse/sst)
@@ -149,22 +155,22 @@ r2_adj = 1 - (mse/mst)
 print(c(r2 = r2,r2_adj = r2_adj))
 ```
 
-#### e)
+#### e) Use item (b) to test the significance of the regression (F test). Outline the hypothesis of this test, compute the test statistic and conclude using the critical regions approach.
 
 ```{r}
 f_stat = msr/mse
 c(f_stat = f_stat,"95% CI F distribution" = qf(0.95,p, n - p - 1))
 ```
 
-Reject H0
+The F-statistic we have calculated is 29.4368. The 95% value of the F distribution for df = p and df = n-p-1 is 3.008787. Since, the F is greater than the 0.95 quantile, we reject H0.
 
-#### f)
+#### f) Show numerically that R2 is equal to the square of the correlation coefficient between Yi and Yi_cap.
 
 ```{r}
 c("Square of correlation coefficent" = cor(football$y, fitted.values(football_model))^2, "R2" = r2)
 ```
 
-#### g)
+#### g) Find a 95% CI on the mean number of games won by a team when x2 = 2300,x7 = 56,x8 = 2100.
 
 ```{r}
 X_Star = matrix(c(1,2300,56,2100),ncol=1)
@@ -177,7 +183,7 @@ Y_Star_mean_lower = Y_Star_mean - qt(0.95,n-p-1) * sqrt(sigma_2 * t(X_Star)%*%so
 c(lower = Y_Star_mean_lower,upper = Y_Star_mean_upper)
 ```
 
-#### h)
+#### h) Fit the model using x7 and x8 only and compute its error sums of squares.
 
 ```{r}
 football_model_2 = lm(y ~ x7 + x8,data=football)
@@ -211,14 +217,14 @@ msr_2 = ssr_2 / df_ssr_2
 cat("MSE = ",mse_2," , ","MSR = ",msr_2," , ","MST = ",mst_2)
 ```
 
-#### i)
+#### i) Perform an F test for H0 : β2 = β3 = 0 versus H1 : at least one of β2 or β3 is different than zero.
 
 ```{r}
 f_stat_2 = msr_2/mse_2
 c(f_stat = f_stat_2,"95% CI F distribution" = qf(0.95,p_2,n -p_2 -1))
 ```
 
-#### j)
+#### j) Recompute R2 and R2 adj for the new model. How do these quantities compute to those in (d)?
 
 ```{r}
 r2_2 = 1 - (sse_2/sst_2)
@@ -227,9 +233,7 @@ r2_adj_2 = 1 - (mse_2/mst_2)
 print(c(r2 = r2_2,r2_adj = r2_adj_2))
 ```
 
-#### k)
-
-Y_Star_mean_upper - Y_Star_mean_lower
+#### k) Recompute the 95% confidence interval on the mean number of games won by a team with the new model, using x7 = 56,x8 = 2100. Compare the length of the interval to g).
 
 ```{r}
 X = model.matrix(football_model_2)
@@ -247,38 +251,36 @@ Y_Star_mean_lower = Y_Star_mean - qt(0.95,n - p_2 - 1) * sqrt(sigma_2 * t(X_Star
 c(lower = Y_Star_mean_lower,upper = Y_Star_mean_upper)
 ```
 
-#### l)
+#### l) Comment on how removing x2 from the model changed the model adequacy and its predictions.
 
-```{r}
+On removing x2, the model started performing worse. We can very clearly see if from the SSE value and R2 values. The initial model had a lesser SSE and a higher R2 value which signifies a better model.
 
-```
-
-## Q5)
+## Q5) Types of variables
 
 ```{r}
 bike_sharing = read.csv("bikesharing.csv")
 ```
 
-#### a)
+#### a) Explain how to code the month of the year mnth using indicator variables.
 
 ```{r}
 bike_sharing$mnth = as.factor(bike_sharing$mnth)
 ```
 
-#### b)
+#### b) Using R, fit a linear regression model to cnt using hum: the normalised measure of humidity, windspeed: the normalised wind speed on the day, temp: the normalised temperature, and mnth. Make sure to use mnth as a categorical variable using January as the reference category. Include the summary of the fitted model.
 
 ```{r}
 bike_model = lm(cnt ~ hum + windspeed + temp + mnth, data = bike_sharing)
 summary(bike_model)
 ```
 
-#### c)
+#### c) Is there an indication that month of the year is an important variable?
 
 ```{r}
 anova(bike_model)
 ```
 
-#### d)
+#### d) What months of the year have a different average number of bike rentals in comparison to January, given hum, temp and windspeed? Use α = 0.05.
 
 By looking at the summary chart of the model, we can see the following.
 
@@ -290,7 +292,7 @@ Months **without** significant difference compared to January, given Hum, Temp, 
 
 **February, March, June, July, August.**
 
-#### e)
+#### e) Given hum = 0.4,temp = 0.3,windspeed = 0.65, what is the average number of rentals in each month? Report a table with your results.
 
 ```{r}
 X_Star = matrix(nrow = 0,ncol = 15)
